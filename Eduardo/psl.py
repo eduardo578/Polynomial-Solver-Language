@@ -18,11 +18,15 @@ def lex(filecontents):
 	varStarted = 0
 	polStarted = 0
 	termStarted = 0
+	polCounter = 0
+	function = 0
+	isPolExpr = False
 	var = ""
 	string = ""
 	expr = ""
 	n = ""
 	pol = ""
+	polExpr = ""
 	for char in filecontents:
 		tok += char
 		if tok == " ":
@@ -35,18 +39,27 @@ def lex(filecontents):
 				tokens.append("expr:" + expr)
 				expr = ""
 				isexpr = 0
+			elif pol != "" and polCounter == 1 and isPolExpr == True:
+				tokens.append("PolExpr:" + pol)
+				pol = ""
+				polCounter = 0
 			elif expr != "" and isexpr == 0:
 				tokens.append("num:" + expr)
 				expr = ""
 				isexpr = 1
+			elif pol != "" and polCounter == 0 and isPolExpr == True:
+				tokens.append("pol:" + pol)
+				pol = ""
+				polCounter = 0
 			elif var != "":
 				tokens.append("var:" + var)
 				var = ""
 				varStarted = 0
-			elif pol !="" and polStarted == 0:
+			elif pol !="" and polStarted == 0 and isPolExpr == False:
 				tokens.append("pol:" + pol)
 				pol = ""	
 			tok = ""
+			isPolExpr = False
 		elif tok == "=" and state == 0:
 			if var != "":
 				tokens.append("var:" + var)
@@ -69,13 +82,17 @@ def lex(filecontents):
 		elif tok == "print" or tok == "PRINT":
 			tokens.append("print")
 			tok = ""
-		elif polStarted == 0 and (tok == "0" or tok == "1" or tok == "2" or tok == "3" or tok == "4" or tok == "5" or tok == "6" or tok == "7" or tok == "8" or tok == "9"):
+		elif polStarted == 0 and state == 0 and (tok == "0" or tok == "1" or tok == "2" or tok == "3" or tok == "4" or tok == "5" or tok == "6" or tok == "7" or tok == "8" or tok == "9"):
 			expr += tok
 			tok =""
-		elif tok == "+" or tok == "-" or tok == "/" or tok == "*":
-			isexpr = 1
+		elif polCounter == 0 and (tok == "+" or tok == "-" or tok == "/" or tok == "*"):
 			expr += tok
 			tok = ""
+			isexpr = 1
+		elif polCounter == 1 and (tok == "+" or tok == "-" or tok == "/" or tok == "*" or tok =="#" or tok == "@"):
+			pol += tok
+			tok = ""
+			isPolExpr = True
 		elif tok == "[":
 			pol += tok
 			polStarted = 1
@@ -99,6 +116,7 @@ def lex(filecontents):
 			pol += tok
 			tok = ""
 			polStarted =0
+			polCounter = 1
 		elif tok == "\"":
 			if state == 0:
 				state = 1
@@ -147,6 +165,8 @@ def doPrint(toPrint):
 		toPrint = evalExpression(toPrint[5:])
 	elif(toPrint[0:3] == "pol"):
 		toPrint = toPrint[4:]
+	elif(toPrint[0:7] == "PolExpr"):
+		toPrint = toPrint[8:]
 	print(toPrint)
 
 
@@ -164,7 +184,7 @@ def getVariable(varName):
 def parse(toks):
 	i = 0
 	while(i < len(toks)):
-		if toks[i] + " " + toks[i+1][0:6] == "print string" or toks[i] + " " + toks[i+1][0:3] == "print num" or toks[i] + " " + toks[i+1][0:4] == "print expr" or toks[i] + " " + toks[i+1][0:3] == "print var" or toks[i] + " " + toks[i+1][0:3] == "print pol":
+		if toks[i] + " " + toks[i+1][0:6] == "print string" or toks[i] + " " + toks[i+1][0:3] == "print num" or toks[i] + " " + toks[i+1][0:4] == "print expr" or toks[i] + " " + toks[i+1][0:3] == "print var" or toks[i] + " " + toks[i+1][0:3] == "print pol" or toks[i] + " " + toks[i+1][0:7] == "print PolExpr":
 			if toks[i+1][0:6] == "string":
 				doPrint(toks[i+1])
 			elif toks[i+1][0:3] == "num":
@@ -175,8 +195,10 @@ def parse(toks):
 				doPrint(getVariable(toks[i+1]))
 			elif toks[i+1][0:3] == "pol":
 				doPrint(toks[i+1])
+			elif toks[i+1][0:7] == "PolExpr":
+				doPrint(toks[i+1])
 			i+= 2
-		elif toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:6] == "var equals string" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "var equals num" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "var equals expr" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "var equals var" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "var equals pol":
+		elif toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:6] == "var equals string" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "var equals num" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:4] == "var equals expr" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "var equals var" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:3] == "var equals pol" or toks[i][0:3] + " " + toks[i+1] + " " + toks[i+2][0:7] == "var equals PolExpr":
 			if toks[i+2][0:6] == "string":
 				doAssign(toks[i],toks[i+2])
 			elif toks[i+2][0:3] == "num":
@@ -186,6 +208,8 @@ def parse(toks):
 			elif toks[i+2][0:3] == "var":
 				doAssign(toks[i],getVariable(toks[i+2]))
 			elif toks[i+2][0:3] == "pol":
+				doAssign(toks[i],toks[i+2])
+			elif toks[i+2][0:7] == "PolExpr":
 				doAssign(toks[i],toks[i+2])
 			i+=3
 	#print(symbols)

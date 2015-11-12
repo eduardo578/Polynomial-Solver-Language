@@ -20,7 +20,12 @@ def lex(filecontents):
 	termStarted = 0
 	polCounter = 0
 	function = 0
+	negative = 0
+	error = 0
+	eStarted = 0
 	isPolExpr = False
+	evaluate = False
+	undefinedToken = False
 	var = ""
 	string = ""
 	expr = ""
@@ -60,6 +65,7 @@ def lex(filecontents):
 				pol = ""	
 			tok = ""
 			isPolExpr = False
+			polCounter = 0
 		elif tok == "=" and state == 0:
 			if var != "":
 				tokens.append("var:" + var)
@@ -78,18 +84,20 @@ def lex(filecontents):
 					var = ""
 					varStarted = 0
 			var += tok
-			tok = ""	
+			tok = ""
 		elif tok == "print" or tok == "PRINT":
 			tokens.append("print")
 			tok = ""
-		elif polStarted == 0 and state == 0 and (tok == "0" or tok == "1" or tok == "2" or tok == "3" or tok == "4" or tok == "5" or tok == "6" or tok == "7" or tok == "8" or tok == "9"):
+		elif eStarted == 0 and polStarted == 0 and state == 0 and (tok == "0" or tok == "1" or tok == "2" or tok == "3" or tok == "4" or tok == "5" or tok == "6" or tok == "7" or tok == "8" or tok == "9"):
 			expr += tok
 			tok =""
-		elif polCounter == 0 and (tok == "+" or tok == "-" or tok == "/" or tok == "*"):
+		elif negative == 0 and polCounter == 0 and (tok == "+" or tok == "-" or tok == "/" or tok == "*"):
 			expr += tok
 			tok = ""
 			isexpr = 1
 		elif polCounter == 1 and (tok == "+" or tok == "-" or tok == "/" or tok == "*" or tok =="#" or tok == "@"):
+			if(tok == "@"):
+				evaluate = True
 			pol += tok
 			tok = ""
 			isPolExpr = True
@@ -97,15 +105,26 @@ def lex(filecontents):
 			pol += tok
 			polStarted = 1
 			tok = ""
-		elif tok == "(" and polStarted == 1:
+		elif evaluate == False and tok == "(" and polStarted == 1:
 				pol += tok
 				tok = ""
 				termStarted = 1
+				negative = 1
 		elif termStarted == 1:
 			if tok == "0" or tok == "1" or tok == "2" or tok == "3" or tok == "4" or tok == "5" or tok == "6" or tok == "7" or tok == "8" or tok == "9":
 				pol += tok
 				tok = ""
+				negative = 0
+				error = 0
+			elif tok == "-" and negative == 1:
+				pol += tok
+				tok = ""
+				negative = 0
+				error = 1
 			elif tok == ",":
+				if error == 1:
+					print("Syntax Error: No Number after Negative Sign!!")
+					exit()
 				pol += tok
 				tok = ""
 			elif tok == ")":
@@ -117,6 +136,25 @@ def lex(filecontents):
 			tok = ""
 			polStarted =0
 			polCounter = 1
+		elif evaluate == True and tok == "(":
+			pol += tok
+			tok = ""
+			eStarted = 1
+			negative = 1
+		elif eStarted == 1:
+			if tok == "0" or tok == "1" or tok == "2" or tok == "3" or tok == "4" or tok == "5" or tok == "6" or tok == "7" or tok == "8" or tok == "9":
+				pol += tok
+				tok = ""
+				negative = 0
+			elif tok == "-" and negative == 1:
+				pol += tok
+				tok = ""
+				negative = 0
+			elif tok == ")":
+				pol += tok
+				tok = ""
+				eStarted = 0
+				evaluate = False
 		elif tok == "\"":
 			if state == 0:
 				state = 1
@@ -164,14 +202,46 @@ def doPrint(toPrint):
 	elif(toPrint[0:4] == "expr"):
 		toPrint = evalExpression(toPrint[5:])
 	elif(toPrint[0:3] == "pol"):
-		toPrint = toPrint[4:]
+		toPrint = polynomialPrint(toPrint[4:])
 	elif(toPrint[0:7] == "PolExpr"):
-		toPrint = toPrint[8:]
+		toPrint = polynomialFunctions(toPrint[8:])
 	print(toPrint)
+
+
+def polynomialPrint(pol):
+	return "Aqui se hara el print del polinomio"
+
+
+def polynomialFunctions(PolExpr):
+	return "Aqui se haran las funciones"
+	# PolExpr = "," + PolExpr
+
+	# i = len(PolExpr) - 1
+	# num = ""
+
+	# while i >= 0:
+	# 	if (PolExpr[i] == "+" or PolExpr[i] == "-" or PolExpr[i] == "/" or PolExpr[i] == "*" or PolExpr[i] == "%" or PolExpr[i] == "(" or PolExpr[i] == ")" or  PolExpr[i] == "[" or PolExpr[i] == "]" ):
+	# 		num = num[::-1]
+	# 		num_stack.append(num)
+	# 		num_stack.append(PolExpr[i])
+	# 		num = ""
+	# 	elif (PolExpr[i] == ","):
+	# 		num = num[::-1]
+	# 		num_stack.append(num)
+	# 		num = ""
+	# 	else:
+	# 		num += PolExpr[i]
+	# 	i-=1
+	# print(num_stack)
+
+
 
 
 def doAssign(varName,varValues):
 	symbols[varName[4:]] = varValues
+
+
+
 
 def getVariable(varName):
 	varName = varName[4:]

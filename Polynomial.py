@@ -47,8 +47,40 @@ class Polynomial(object):
                 c.coefficients[i+j] += (self.coefficients[i]*other.coefficients[j])
         return c
 
-    #def division(self, other):
-        #To be implemented
+    def division(self, other):
+        dividend = self
+        divisor = other
+        quotient_list = []
+        temp_quotient = []
+        new_dividend = []
+        div_result = []
+        if other.degree() == 0:
+            return "Division by 0 error"
+        for i in range(0, self.degree() - other.degree() + 1, 1):
+            quotient_list.append(0)
+        while dividend.degree() >= divisor.degree():
+            quotient_list[dividend.degree()-divisor.degree()] = (dividend.coefficients[dividend.degree()])/(divisor.coefficients[divisor.degree()])
+            for i in range(0, dividend.degree() - divisor.degree() + 1, 1):
+                temp_quotient.append(0)
+            temp_quotient[dividend.degree()-divisor.degree()] = quotient_list[dividend.degree()-divisor.degree()]
+            quotient = Polynomial(temp_quotient)
+            temp_quotient = []
+            pol_subtract = divisor.multiplication(quotient)
+            dividend = dividend.substraction(pol_subtract)
+            if dividend.coefficients[dividend.degree()] == 0:
+                for i in range(0, dividend.degree(), 1):
+                    new_dividend.append(0)
+                    new_dividend[i] = dividend.coefficients[i]
+            dividend = Polynomial(new_dividend)
+            new_dividend = []
+        quotient = Polynomial(quotient_list)
+        remainder = dividend
+        div_result.append(quotient)
+        if remainder.degree() != 0 or remainder.coefficients[0] != 0:
+            div_result.append(divisor)
+            div_result.append(remainder)
+        return div_result
+
 
     def differentiate(self):
         list = []

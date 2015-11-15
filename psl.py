@@ -236,7 +236,23 @@ def polynomialFunctions(PolExpr):
 			print ("*__________________")
 			return (polynomial1.multiplication(polynomial2).tostr() + "\n")
 		elif c == '/' and newpoli == 0:
-			return "\n"
+			operation = PolExpr.split('/', 1)
+			pol1 = strtoPolynomialArray(operation[0])
+			pol2 = strtoPolynomialArray(operation[1])
+			polynomial1 = Polynomial(pol1)
+			polynomial2 = Polynomial(pol2)
+			print (polynomial1.tostr())
+			print (polynomial2.tostr())
+			print ("/__________________")
+			if polynomial1.degree() < polynomial2.degree():
+				return "Numerator must have a higher or equal degree compare with the denominator to be able divide both"
+			if polynomial2.degree() == 0:
+				return "Division by 0 error"
+			result = []
+			result = polynomial1.division(polynomial2)
+			if len(result) == 3:
+				return result[0].tostr() + " + " + result[2].tostr() + "/" + "(" + result[1].tostr() + ")" + "\n"
+			return (result[0].tostr() + "\n")
 		elif c == '#' and newpoli == 0:
 			operation = PolExpr.split('#', 1)
 			pol1 = strtoPolynomialArray(operation[0])
